@@ -1,52 +1,42 @@
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# 初期設定
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-    st.session_state.answers = []
-    st.session_state.guess = None
+# タイトルと説明を追加
+st.title("データ分析ダッシュボード")
+st.write("このダッシュボードでは、CSVファイルをアップロードしてデータを分析することができます。")
 
-# 質問リスト（シンプルな例）
-questions = [
-    "それは生き物ですか？",
-    "それはフィクションのキャラクターですか？",
-    "それは人間ですか？",
-    "それは映画に出てきますか？"
-]
+# CSVファイルのアップロード
+uploaded_file = st.file_uploader("CSVファイルをアップロードしてください", type=["csv"])
 
-# 簡単な推測アルゴリズム（サンプルのために簡単なロジックを使用）
-def make_guess(answers):
-    if answers == [True, True, True, True]:
-        return "あなたが考えているのは、スーパーマンです！"
-    elif answers == [True, True, True, False]:
-        return "あなたが考えているのは、ハリーポッターです！"
-    elif answers == [True, True, False, True]:
-        return "あなたが考えているのは、キングコングです！"
-    else:
-        return "まだ正確に当てられませんでした。"
-
-# 質問を進める
-if st.session_state.step <= len(questions):
-    question = questions[st.session_state.step - 1]
-    st.write(f"質問 {st.session_state.step}: {question}")
+if uploaded_file is not None:
+    # CSVファイルをDataFrameに読み込む
+    df = pd.read_csv(uploaded_file)
     
-    yes = st.button("はい")
-    no = st.button("いいえ")
+    # データの表示
+    st.write("アップロードされたデータのプレビュー:")
+    st.write(df.head())
 
-    if yes:
-        st.session_state.answers.append(True)
-        st.session_state.step += 1
-    elif no:
-        st.session_state.answers.append(False)
-        st.session_state.step += 1
+    # 基本統計情報の表示
+    st.write("基本統計情報:")
+    st.write(df.describe())
+
+    # グラフ表示のための列選択
+    st.write("グラフを作成する列を選択してください:")
+    x_column = st.selectbox("X軸の列", df.columns)
+    y_column = st.selectbox("Y軸の列", df.columns)
+
+    # 折れ線グラフの作成
+    st.write(f"{x_column} と {y_column} の折れ線グラフ:")
+    fig, ax = plt.subplots()
+    ax.plot(df[x_column], df[y_column])
+    st.pyplot(fig)
+
+    # ヒストグラムの作成
+    st.write(f"{y_column} のヒストグラム:")
+    fig, ax = plt.subplots()
+    ax.hist(df[y_column], bins=20)
+    st.pyplot(fig)
+
 else:
-    if st.session_state.guess is None:
-        st.session_state.guess = make_guess(st.session_state.answers)
-    
-    st.write(st.session_state.guess)
-    restart = st.button("もう一度プレイ")
-
-    if restart:
-        st.session_state.step = 1
-        st.session_state.answers = []
-        st.session_state.guess = None
+    st.write("CSVファイルをアップロードしてください。")
